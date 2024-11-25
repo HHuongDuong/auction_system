@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Proof of Payment</title>
+</head>
+<body>
+<h1>Submit Proof of Payment</h1>
+<form id="proofForm" enctype="multipart/form-data">
+    <label for="paymentId">Payment ID:</label>
+    <input type="number" id="paymentId" required><br><br>
+
+    <label for="proofOfPayment">Upload Proof of Payment:</label>
+    <input type="file" id="proofOfPayment" accept="image/*" required><br><br>
+
+    <button type="submit">Submit</button>
+</form>
+
+<script>
+    document.getElementById('proofForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const paymentId = document.getElementById('paymentId').value;
+        const proofOfPaymentFile = document.getElementById('proofOfPayment').files[0];
+
+        const formData = new FormData();
+        formData.append('proofOfPayment', proofOfPaymentFile);
+
+        try {
+            const response = await fetch(`http://localhost:8081/api/payments/${paymentId}/proof`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                alert('Proof of payment submitted successfully!');
+            } else {
+                const error = await response.text();
+                alert(`Failed to submit proof of payment: ${error}`);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while submitting the proof of payment.');
+        }
+    });
+</script>
+</body>
+</html>
