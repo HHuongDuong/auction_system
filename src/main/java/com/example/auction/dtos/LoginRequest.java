@@ -1,15 +1,15 @@
 package com.example.auction.dtos;
 
 public class LoginRequest {
-    private String username;
+    private String accountname;
     private String password;
 
-    public String getUsername() {
-        return username;
+    public String getAccountname() {
+        return accountname;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setAccountname(String accountname) {
+        this.accountname = accountname;
     }
 
     public String getPassword() {

@@ -12,7 +12,7 @@ public class Account {
     private Long accId;
     @Column(nullable = false, unique = true)
     private String accountname;
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String name;
     @Column(nullable = false)
     private String password;
@@ -32,6 +32,13 @@ public class Account {
 
     public Account(Long accId) {
         this.accId = accId;
+    }
+
+    public Account(String accountname, String name, String password, String email) {
+        this.accountname = accountname;
+        this.name = name;
+        this.password = password;
+        this.email = email;
     }
 
     public Long getAccId() {

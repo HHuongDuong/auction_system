@@ -8,17 +8,25 @@ import com.example.auction.model.Status;
 import com.example.auction.repository.AccountRepository;
 import com.example.auction.repository.RoleChangeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
-public class AccountService {
+public class AccountService implements UserDetailsService {
 
     @Autowired
-    private static AccountRepository accountRepository;
+    private AccountRepository accountRepository;
 
     @Autowired
     private RoleChangeRepository roleChangeRepository;
@@ -29,37 +37,56 @@ public class AccountService {
     @Autowired
     private JwtUtils jwtUtils;
 
-    @Autowired
-    public AccountService(AccountRepository accountRepository) {
-        AccountService.accountRepository = accountRepository;
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        // Tìm tài khoản theo username
+        Account account = accountRepository.findByAccountname(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
+
+        // Trả về đối tượng UserDetails
+        return org.springframework.security.core.userdetails.User.builder()
+                .username(account.getAccountname())
+                .password(account.getPassword())
+                .roles(account.getRole().name()) // Sử dụng tên role từ enum Role
+                .build();
     }
 
-    public Account createAccount(String accountname, String password, String email, Role role) {
+    @Transactional
+    public Account createAccount(String accountname, String name, String password, String email, Role role) {
         if (accountRepository.findByAccountname(accountname).isPresent()) {
             throw new RuntimeException("Username is already taken!");
         }
 
         Account account = new Account();
         account.setAccountname(accountname);
+        account.setName(name);
         account.setPassword(passwordEncoder.encode(password));
         account.setEmail(email);
-        account.setRole(role != null ? role : Role.USER); // Gán role tương ứng
+        account.setRole(role); // Gán role tương ứng
+
         return accountRepository.save(account);
     }
 
-    public String login(String accountName, String password){
-        Optional<Account> accountOptional = accountRepository.findByAccountname(accountName);
-        if (accountOptional.isEmpty()){
-            throw new RuntimeException("Invalid username or password!");
+    public String login(String accountname, String password, AuthenticationManager authenticationManager) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(accountname, password)
+            );
+
+            // Đảm bảo rằng authentication đã thành công
+            if (authentication.isAuthenticated()) {
+                return jwtUtils.generateToken(accountname); // Trả về JWT nếu thành công
+            } else {
+                throw new RuntimeException("Invalid credentials");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Authentication failed: " + e.getMessage());
         }
+    }
 
-        Account account = accountOptional.get();
-
-        if (!passwordEncoder.matches(password, account.getPassword())) {
-            throw new RuntimeException("Invalid username or password!");
-        }
-
-        return jwtUtils.generateToken(accountName);
+    public Account getAccountInfo(String accountname) {
+        return accountRepository.findByAccountname(accountname)
+                .orElseThrow(() -> new RuntimeException("Account not found for username: " + accountname));
     }
 
     public RoleChange requestAdminRole(String accountname) {
@@ -74,6 +101,8 @@ public class AccountService {
         return roleChangeRepository.save(request);
     }
 
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    @Transactional
     public RoleChange approveRequest(Long requestId) {
         RoleChange request = accountRepository.findRequestById(requestId)
                 .orElseThrow(() -> new RuntimeException("Request not found."));

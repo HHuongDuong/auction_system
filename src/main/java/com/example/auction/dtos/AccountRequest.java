@@ -2,20 +2,28 @@ package com.example.auction.dtos;
 
 import com.example.auction.model.Role;
 
-public class RegisterRequest {
+public class AccountRequest {
 
-    private String username;
+    private String accountname;
+    private String name;
     private String password;
     private String email;
-    private Role role; // Optional: Default to USER if not provided
+    private Role role;
 
-    // Getters and Setters
-    public String getUsername() {
-        return username;
+    public String getAccountname() {
+        return accountname;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setAccountname(String accountname) {
+        this.accountname = accountname;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getPassword() {

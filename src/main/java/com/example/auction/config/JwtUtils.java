@@ -36,4 +36,23 @@ public class JwtUtils {
     public String getUsernameFromToken(String token) {
         return Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody().getSubject();
     }
+
+    // Phương thức để lấy username từ JWT
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject); // Lấy thông tin "subject" từ token
+    }
+
+    // Phương thức hỗ trợ để trích xuất claim
+    public <T> T extractClaim(String token, java.util.function.Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
+    // Trích xuất tất cả claims từ JWT
+    private Claims extractAllClaims(String token) {
+        return Jwts.parser()
+                .setSigningKey(jwtSecret) // Sử dụng key bí mật để giải mã
+                .parseClaimsJws(token)
+                .getBody();
+    }
 }
