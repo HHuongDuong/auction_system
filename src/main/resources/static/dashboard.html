@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            margin-top: 50px;
+        }
+
+        h1 {
+            color: #4CAF50;
+            text-align: center;
+            font-size: 2.5em;
+        }
+
+        #welcome-message {
+            font-size: 1.2em;
+            color: #555;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        h2 {
+            color: #333;
+            font-size: 1.5em;
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        ul li {
+            margin: 10px 0;
+        }
+
+        ul li a {
+            text-decoration: none;
+            color: #007BFF;
+            font-size: 1.1em;
+            transition: color 0.3s;
+        }
+
+        ul li a:hover {
+            color: #0056b3;
+        }
+
+        .logout-btn {
+            color: red;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .logout-btn:hover {
+            text-decoration: underline;
+        }
+
+        .alert {
+            background-color: #f44336;
+            color: white;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-around;
+            padding-top: 20px;
+        }
+
+        .navigation a {
+            text-decoration: none;
+            color: #fff;
+            background-color: #4CAF50;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .navigation a:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Welcome to the Dashboard</h1>
+    <p id="welcome-message">Loading...</p>
+
+    <h2>Navigation</h2>
+    <div class="navigation">
+        <a href="profile.html">View Profile</a>
+        <a href="active-auction.html">View Active Auctions</a>
+        <a href="login.html" class="logout-btn" onclick="logout()">Logout</a>
+    </div>
+
+    <!-- Alert message will be shown if no token -->
+    <div id="alert" class="alert" style="display: none;">
+        You are not logged in. Please login first.
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const token = localStorage.getItem('token'); // Get token from localStorage
+        if (!token) {
+            alert('You must be logged in to access this page.');
+            window.location.href = 'login.html'; // Redirect to login page if no token
+            return;
+        }
+
+        fetch('http://localhost:8081/api/user', {
+            headers: {
+                'Authorization': `Bearer ${token}` // Add token to header
+            }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Invalid token'); // Invalid token
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById('welcome-message').innerText = `Hi, ${data.username}!`;
+        })
+        .catch(error => {
+            console.error('Error fetching user info:', error);
+            alert('Session expired. Please login again.');
+            localStorage.removeItem('token'); // Remove token from localStorage
+            window.location.href = 'login.html';
+        });
+    });
+
+    function logout() {
+        localStorage.removeItem('token'); // Remove token on logout
+        window.location.href = 'login.html'; // Redirect to login page
+    }
+</script>
+</body>
+</html>
