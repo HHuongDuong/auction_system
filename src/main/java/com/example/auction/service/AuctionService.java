@@ -71,5 +71,49 @@ public class AuctionService {
     public List<Bid> getBidsForAuction(Long auctionId) {
         return bidRepository.findByAuction_AucId(auctionId);
     }
+
+    public Auction updateAuction(Long id, Auction updatedAuction) {
+        // Kiểm tra xem đấu giá có tồn tại không
+        Optional<Auction> existingAuctionOptional = auctionRepository.findById(id);
+        if (existingAuctionOptional.isEmpty()) {
+            throw new RuntimeException("Auction not found with ID: " + id);
+        }
+
+        Auction existingAuction = existingAuctionOptional.get();
+
+        // Chỉ cho phép chỉnh sửa nếu đấu giá chưa bắt đầu hoặc không có giá thầu
+        if (existingAuction.hasBids()) {
+            throw new RuntimeException("Cannot update an auction that has started or received bids.");
+        }
+
+        // Cập nhật thông tin
+        existingAuction.setName(updatedAuction.getName());
+        existingAuction.setDescription(updatedAuction.getDescription());
+        existingAuction.setStartingPrice(updatedAuction.getStartingPrice());
+        existingAuction.setEndTime(updatedAuction.getEndTime());
+
+        // Lưu đấu giá đã cập nhật
+        return auctionRepository.save(existingAuction);
+    }
+
+    // Phương thức xóa đấu giá
+    public void deleteAuction(Long id) {
+        // Kiểm tra xem đấu giá có tồn tại không
+        Optional<Auction> auctionOptional = auctionRepository.findById(id);
+        if (auctionOptional.isEmpty()) {
+            throw new RuntimeException("Auction not found with ID: " + id);
+        }
+
+        Auction auction = auctionOptional.get();
+
+        // Kiểm tra trạng thái đấu giá
+        if (auction.hasBids()) {
+            throw new RuntimeException("Cannot delete an auction that has already started.");
+        }
+
+        // Xóa đấu giá
+        auctionRepository.deleteById(id);
+    }
+
 }
 

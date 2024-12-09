@@ -122,4 +122,30 @@ public class AccountService implements UserDetailsService {
     public List<RoleChange> getAllRequests() {
         return roleChangeRepository.findAll();
     }
+
+    // Xóa tài khoản
+    public void deleteAccount(Long id) {
+        Optional<Account> accountOptional = accountRepository.findById(id);
+        if (accountOptional.isEmpty()) {
+            throw new RuntimeException("Account not found with ID: " + id);
+        }
+        accountRepository.deleteById(id);
+    }
+
+    // Lấy danh sách tài khoản
+    public List<Account> getAllAccounts() {
+        return accountRepository.findAll();
+    }
+
+    // Cập nhật quyền hạn tài khoản
+    public Account updateAccountRole(Long id, Role role) {
+        Optional<Account> accountOptional = accountRepository.findById(id);
+        if (accountOptional.isEmpty()) {
+            throw new RuntimeException("Account not found with ID: " + id);
+        }
+
+        Account account = accountOptional.get();
+        account.setRole(role);
+        return accountRepository.save(account);
+    }
 }

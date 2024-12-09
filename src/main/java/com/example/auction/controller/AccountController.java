@@ -4,6 +4,7 @@ import com.example.auction.dtos.AccountRequest;
 import com.example.auction.dtos.AccountResponse;
 import com.example.auction.dtos.LoginRequest;
 import com.example.auction.model.Account;
+import com.example.auction.model.Role;
 import com.example.auction.model.RoleChange;
 import com.example.auction.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,14 +87,16 @@ public class AccountController {
     }
 
     @GetMapping("/login")
-    public ResponseEntity<String> showLoginPage() throws IOException {
-        System.out.println("hello");
+    public ResponseEntity<Resource> showLoginPage() throws IOException {
+        // Tạo resource từ tài nguyên tĩnh
         ClassPathResource resource = new ClassPathResource("static/login.html");
-        String html = StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8);
+
+        // Trả về tài nguyên HTML dưới dạng ResponseEntity
         return ResponseEntity.ok()
                 .header("Content-Type", "text/html")
-                .body(html);
+                .body(resource);
     }
+
 
     // Lấy thông tin tài khoản
     @GetMapping("/{accountname}")
@@ -138,6 +141,37 @@ public class AccountController {
             return ResponseEntity.ok("Request approved for user: " + approvedRequest.getAccountname());
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    // Xóa tài khoản
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteAccount(@PathVariable Long id) {
+        try {
+            accountService.deleteAccount(id);
+            return ResponseEntity.ok("Account deleted successfully.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Lấy danh sách tài khoản
+    @GetMapping
+    public ResponseEntity<List<Account>> getAllAccounts() {
+        List<Account> accounts = accountService.getAllAccounts();
+        return ResponseEntity.ok(accounts);
+    }
+
+    // Cập nhật quyền hạn tài khoản
+    @PutMapping("/{id}/role")
+    public ResponseEntity<?> updateAccountRole(
+            @PathVariable Long id,
+            @RequestParam Role  role) {
+        try {
+            Account account = accountService.updateAccountRole(id, role);
+            return ResponseEntity.ok("Account role updated to: " + account.getRole());
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 

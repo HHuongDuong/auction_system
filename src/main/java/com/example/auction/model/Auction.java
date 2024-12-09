@@ -95,5 +95,9 @@ public class Auction {
     public void setHighestBidder(String highestBidder) {
         this.highestBidder = highestBidder;
     }
+
+    public boolean hasBids() {
+        return this.highestBid != null && this.highestBid.compareTo(this.startingPrice) > 0;
+    }
 }
 
